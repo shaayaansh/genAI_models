@@ -169,41 +169,6 @@ def main():
 
         visualize_and_save(model, test_dataloader, epoch, save_dir=save_directory)
 
-    
-    '''
-    model.eval()
-
-    test_image, test_label = next(iter(test_dataloader))
-    generated, z_means, z_log_vars = model(test_image)
-
-
-    num_images = 8
-    
-    fig, axs = plt.subplots(2, num_images, figsize=(10, 4))
-
-    for i in range(num_images):
-        # Extract original and generated images
-        original_img = test_image[i].detach().cpu().numpy()
-        gen_img = generated[i].detach().cpu().numpy()
-
-        # Undo normalization (assuming mean=0.5, std=0.5)
-        original_img = original_img * 0.5 + 0.5
-        gen_img = gen_img * 0.5 + 0.5
-
-        # Remove the channel dimension
-        original_img = original_img.squeeze()
-        gen_img = gen_img.squeeze()
-
-        axs[0, i].imshow(original_img, cmap='gray')
-        axs[0, i].set_title("Original")
-        axs[0, i].axis('off')
-
-        axs[1, i].imshow(gen_img, cmap='gray')
-        axs[1, i].set_title("Generated")
-        axs[1, i].axis('off')
-
-    plt.tight_layout()
-    plt.show() '''
 
 
 def visualize_and_save(model, dataloader, epoch, save_dir='vae_reconstructions'):
