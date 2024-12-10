@@ -49,7 +49,7 @@ def main():
     model.train()
 
     loss_fn = nn.BCELoss()
-    optimizer = AdamW(model.parameters(), lr=0.0001)
+    optimizer = AdamW(model.parameters(), lr=0.001)
     model.train()
     num_epochs = 10
 
@@ -63,7 +63,7 @@ def main():
             outputs, z_mean, z_log_var = model(images)
             reconstruction_loss = loss_fn(outputs, images)
             kl_loss = -0.5 * torch.sum(1 + 2 * z_log_var - z_mean**2 - torch.exp(2 * z_log_var))
-            total_loss = reconstruction_loss + 0.005 * kl_loss
+            total_loss = reconstruction_loss + 0.05 * kl_loss
             total_loss.backward()
             optimizer.step()
 
@@ -78,35 +78,41 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.conv1 = nn.Conv2d(
             in_channels=3,          # Changed from 1 to 3 for RGB
-            out_channels=32,
+            out_channels=128,
             kernel_size=3,
             stride=2,
             padding=1               # Added padding to control spatial dimensions
         )
         self.conv2 = nn.Conv2d(
-            in_channels=32,
-            out_channels=64,
+            in_channels=128,
+            out_channels=128,
             kernel_size=3,
             stride=2,
             padding=1
         )
         self.conv3 = nn.Conv2d(
-            in_channels=64,
+            in_channels=128,
             out_channels=128,
             kernel_size=3,
             stride=2,
             padding=1
         )
         self.relu = nn.ReLU()
+        self.leaky_relu = nn.LeakyReLU()
         self.flatten = nn.Flatten()
-        
-        self.linear_mean = nn.Linear(8*8*128, 100)
-        self.linear_log_var = nn.Linear(8*8*128, 100)
+        self.batch_norm1 = nn.BatchNorm2d(128)
+        self.batch_norm2 = nn.BatchNorm2d(128)
+        self.batch_norm3 = nn.BatchNorm2d(128)
+        self.linear_mean = nn.Linear(8*8*128, 200)
+        self.linear_log_var = nn.Linear(8*8*128, 200)
 
     def forward(self, x):
-        conv1 = self.relu(self.conv1(x))     
-        conv2 = self.relu(self.conv2(conv1)) 
-        conv3 = self.relu(self.conv3(conv2)) 
+        conv1 = self.leaky_relu(self.conv1(x))  
+        conv1 = self.batch_norm1(conv1)   
+        conv2 = self.leaky_relu(self.conv2(conv1)) 
+        conv2 = self.batch_norm2(conv2)
+        conv3 = self.leaky_relu(self.conv3(conv2)) 
+        conv3 = self.batch_norm3(conv3)
         flattened = self.flatten(conv3)  
         z_mean = self.linear_mean(flattened)  
         z_log_var = self.linear_log_var(flattened) 
@@ -117,8 +123,12 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
-        self.linear = nn.Linear(100, 128*8*8) 
-        self.relu = nn.ReLU()
+        self.linear = nn.Linear(200, 128*8*8) 
+        self.leaky_relu = nn.LeakyReLU()
+        self.batch_norm1 = nn.BatchNorm2d(64)
+        self.batch_norm2 = nn.BatchNorm2d(32)
+        self.batch_norm3 = nn.BatchNorm2d(16)
+        self.batch_norm4 = nn.BatchNorm2d(3)
         self.conv1_transpose = nn.ConvTranspose2d(
             in_channels=128,
             out_channels=64,
@@ -155,10 +165,14 @@ class Decoder(nn.Module):
     def forward(self, z):
         z = self.linear(z)                    
         z = z.view(z.shape[0], 128, 8, 8)    
-        x = self.relu(self.conv1_transpose(z))  
-        x = self.relu(self.conv2_transpose(x))  
-        x = self.relu(self.conv3_transpose(x)) 
-        x = self.sigmoid(self.conv(x))          
+        x = self.leaky_relu(self.conv1_transpose(z))  
+        x = self.batch_norm1(x)
+        x = self.leaky_relu(self.conv2_transpose(x)) 
+        x = self.batch_norm2(x) 
+        x = self.leaky_relu(self.conv3_transpose(x)) 
+        x = self.batch_norm3(x)
+        x = self.batch_norm4(self.conv(x))
+        x = self.sigmoid(x)          
         
         return x
 
@@ -168,6 +182,7 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.encoder = Encoder()
         self.decoder = Decoder()
+        
 
     def reparameterize(self, mu, log_var):
         epsilon = torch.randn_like(mu)
@@ -194,7 +209,6 @@ def visualize_and_save(model, dataloader, epoch, save_dir='celeb_vae_reconstruct
     """
     model.eval()  
     with torch.no_grad():
-        # Get a batch of images
         test_image, test_label = next(iter(dataloader))
         decoded, z_mean, z_log_var = model(test_image)
     
