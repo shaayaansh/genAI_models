@@ -15,9 +15,9 @@ Below is a comparison of a batch of original images and their reconstructed coun
 
 **Original vs. Reconstructed Images**
 
-| Original | Reconstructed |
-|----------|---------------|
-| ![Original Image](autoencoder.jpg) | ![Reconstructed Image](images/reconstructed_example.png) |
+| Original vs reconstructed|
+|------------------------------------|
+| ![Original Image](AutoEncoder.jpg) |
 
 *(Make sure you have `original_example.png` and `reconstructed_example.png` placed in the `images` directory. Adjust the paths as needed.)*
 
