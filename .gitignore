@@ -1,3 +1,4 @@
 MLP/data/*
 AutoEncoder/data/*
 .DS_Store
+AutoEncoder/celeb_data/*
