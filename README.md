@@ -19,7 +19,6 @@ Below is a comparison of a batch of original images and their reconstructed coun
 |------------------------------------|
 | ![Original Image](AutoEncoder.jpg) |
 
-*(Make sure you have `original_example.png` and `reconstructed_example.png` placed in the `images` directory. Adjust the paths as needed.)*
 
 ## MLP Model (Convolution-based)
 
@@ -27,10 +26,5 @@ Despite being called “MLP,” the model in the `MLP` folder actually uses `Con
 - Extracts local features via convolutional layers.
 - Potentially adds fully connected layers at the end for classification.
 
-This naming is a historical artifact or a misnomer. Going forward, consider renaming the model or clarifying that it’s not a traditional MLP but rather a CNN-based model.
 
-## Getting Started
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/username/genAI_models.git
