@@ -1,2 +1,36 @@
-# genAI_models
-Generative Models AI Implementations
+# GenAI Models
+
+This repository contains implementations of deep learning models related to generative AI tasks.
+
+## Autoencoder
+
+The autoencoder in this repository encodes input images into a latent representation and then decodes them back to an output image. This process allows the model to learn efficient, compressed representations of the data.
+
+**Key features:**
+- Encoder: Uses `Conv2d` layers with downsampling to reduce the input image to a low-dimensional latent space.
+- Decoder: Uses `ConvTranspose2d` layers to reconstruct the original image from the latent representation.
+- Training: The model is trained using a simple reconstruction loss (such as MSE or BCE) to ensure the decoded output closely matches the input.
+
+Below is a comparison of a batch of original images and their reconstructed counterparts after training the autoencoder:
+
+**Original vs. Reconstructed Images**
+
+| Original | Reconstructed |
+|----------|---------------|
+| ![Original Image](autoencoder.jpg) | ![Reconstructed Image](images/reconstructed_example.png) |
+
+*(Make sure you have `original_example.png` and `reconstructed_example.png` placed in the `images` directory. Adjust the paths as needed.)*
+
+## MLP Model (Convolution-based)
+
+Despite being called “MLP,” the model in the `MLP` folder actually uses `Conv2d` layers to process image data. Instead of being a pure multi-layer perceptron, it’s a CNN that:
+- Extracts local features via convolutional layers.
+- Potentially adds fully connected layers at the end for classification.
+
+This naming is a historical artifact or a misnomer. Going forward, consider renaming the model or clarifying that it’s not a traditional MLP but rather a CNN-based model.
+
+## Getting Started
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/username/genAI_models.git
