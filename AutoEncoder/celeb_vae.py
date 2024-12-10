@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torch.optim import AdamW
 import matplotlib.pyplot as plt
 import os
-from vae import visualize_and_save
+import numpy as np
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
     val_size = len(dataset) - train_size
 
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
+    
     print(f"Training samples: {len(train_dataset)}")
     print(f"Test samples: {len(val_dataset)}")
 
@@ -51,7 +51,7 @@ def main():
     loss_fn = nn.BCELoss()
     optimizer = AdamW(model.parameters(), lr=0.0001)
     model.train()
-    num_epochs = 15
+    num_epochs = 10
 
     save_directory = 'celeb_vae_reconstructions'
     os.makedirs(save_directory, exist_ok=True)
@@ -100,8 +100,8 @@ class Encoder(nn.Module):
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
         
-        self.linear_mean = nn.Linear(8*8*128, 10)
-        self.linear_log_var = nn.Linear(8*8*128, 10)
+        self.linear_mean = nn.Linear(8*8*128, 100)
+        self.linear_log_var = nn.Linear(8*8*128, 100)
 
     def forward(self, x):
         conv1 = self.relu(self.conv1(x))     
@@ -117,7 +117,7 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
-        self.linear = nn.Linear(10, 128*8*8) 
+        self.linear = nn.Linear(100, 128*8*8) 
         self.relu = nn.ReLU()
         self.conv1_transpose = nn.ConvTranspose2d(
             in_channels=128,
@@ -179,6 +179,57 @@ class VAE(nn.Module):
         z = self.reparameterize(z_mean, z_log_var)
         decoded = self.decoder(z)
         return decoded, z_mean, z_log_var
+
+
+
+def visualize_and_save(model, dataloader, epoch, save_dir='celeb_vae_reconstructions'):
+    """
+    Visualizes and saves original and reconstructed images from the VAE.
+
+    Args:
+        model (nn.Module): The trained VAE model.
+        dataloader (DataLoader): DataLoader for the dataset to visualize.
+        epoch (int): Current epoch number.
+        save_dir (str): Directory to save the reconstruction images.
+    """
+    model.eval()  
+    with torch.no_grad():
+        # Get a batch of images
+        test_image, test_label = next(iter(dataloader))
+        decoded, z_mean, z_log_var = model(test_image)
+    
+    num_images = 8  
+    fig, axs = plt.subplots(2, num_images, figsize=(num_images * 2, 4))
+    
+    for i in range(num_images):
+        
+        original_img = test_image[i].cpu().numpy()
+        original_img = (original_img * 0.5) + 0.5  
+        original_img = np.transpose(original_img, (1, 2, 0))
+        original_img = np.clip(original_img, 0, 1)  
+        
+        gen_img = decoded[i].cpu().numpy()
+        gen_img = (gen_img * 0.5) + 0.5 
+        gen_img = np.transpose(gen_img, (1, 2, 0)) 
+        gen_img = np.clip(gen_img, 0, 1)  
+        
+        axs[0, i].imshow(original_img)
+        axs[0, i].set_title("Original")
+        axs[0, i].axis('off')
+
+        axs[1, i].imshow(gen_img)
+        axs[1, i].set_title("Reconstructed")
+        axs[1, i].axis('off')
+    
+    plt.suptitle(f'Epoch {epoch + 1}', fontsize=16)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+    
+    os.makedirs(save_dir, exist_ok=True)
+    
+    filename = os.path.join(save_dir, f'epoch_{epoch + 1}.jpg')
+    plt.savefig(filename, format='jpg')
+    plt.close(fig) 
+    model.train() 
 
 
 if __name__ == "__main__":
