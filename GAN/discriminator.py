@@ -39,9 +39,12 @@ class Discriminator(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.leaky_relu = nn.LeakyReLU()
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.4)
         self.linear = nn.Linear(128*2*2, 1)
         self.sigmoid = nn.Sigmoid()
+        self.batch_norm1 = nn.BatchNorm2d(32)
+        self.batch_norm2 = nn.BatchNorm2d(64)
+        self.batch_norm3 = nn.BatchNorm2d(128)
 
 
     def forward(self, x):
@@ -50,12 +53,15 @@ class Discriminator(nn.Module):
         x = self.leaky_relu(x)
         x = self.dropout(x)
         x = self.conv2(x)   # output size [B, 32, 8, 8]
+        x = self.batch_norm1(x)
         x = self.leaky_relu(x)
         x = self.dropout(x)
         x = self.conv3(x)   # output size [B, 64, 4, 4]
+        x = self.batch_norm2(x)
         x = self.leaky_relu(x)
         x = self.dropout(x)
         x = self.conv4(x)   # output size [B, 128, 2, 2]
+        x = self.batch_norm3(x)
         x = self.sigmoid(x)
         flattened = self.flatten(x)
         x = self.linear(flattened)
