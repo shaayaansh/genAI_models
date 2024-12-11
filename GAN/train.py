@@ -10,33 +10,37 @@ from generator import Generator
 from discriminator import Discriminator
 from gan import GAN
 from data_loader import DataLoad
+from torchvision.transforms.functional import to_pil_image
+from pathlib import Path
 
 
 def main():
     loader = DataLoad("train")
     train_dataset, train_dataloader = loader.load()
 
-    num_epochs = 5
-    lr = 0.0001
+    num_epochs = 50
+    lr = 0.0002
     model = GAN(latent_dim=100)
 
     model.train()
     generator = model.generator
     discriminator = model.discriminator
-    discriminator_loss = nn.CrossEntropyLoss()
-    gen_optimizer = AdamW(generator.parameters(), lr=lr)
-    disc_optimizer = AdamW(discriminator.parameters(), lr=lr)
+    discriminator_loss = nn.BCEWithLogitsLoss()
+    gen_optimizer = AdamW(generator.parameters(), lr=lr, betas=(0.5, 0.999))
+    disc_optimizer = AdamW(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 
     for epoch in range(num_epochs):
         for idx, batch in enumerate(tqdm(train_dataloader)):
             real_images, _ = batch
             batch_size = real_images.shape[0]
             noise = torch.randn(batch_size, 100)
-            fake_images = generator(noise, batch_size)
-            
-            real_labels = torch.ones(batch_size, 1).long().squeeze(1)
-            fake_labels = torch.zeros(batch_size, 1).long().squeeze(1)
-            
+            fake_images = generator(noise)
+            # smooth the labels
+            real_labels = torch.full((batch_size, 1), 0.9).float()
+            fake_labels = torch.zeros(batch_size, 1).float()
+            # -------------------------
+            # Train Discriminator
+            # -------------------------
             disc_optimizer.zero_grad()
             disc_output_real = discriminator(real_images)
             disc_output_fake = discriminator(fake_images.detach())
@@ -44,13 +48,40 @@ def main():
             disc_loss_fake = discriminator_loss(disc_output_fake, fake_labels)
             disc_loss = disc_loss_real + disc_loss_fake
             disc_loss.backward()
-            disc_optimizer.step()   
-
+            disc_optimizer.step()  
+            # -------------------------
+            # Train Generator
+            # -------------------------
             gen_optimizer.zero_grad()
             disc_output_fake = discriminator(fake_images)
             gen_loss = discriminator_loss(disc_output_fake, real_labels)
             gen_loss.backward()
             gen_optimizer.step()
+    
+   
+        gen_image(generator, epoch)
+
+
+def gen_image(generator, epoch):
+    generator.eval()  
+
+    batch_size = 4  
+    latent_dim = 100  
+    noise = torch.randn(batch_size, latent_dim)  
+
+    with torch.no_grad(): 
+        fake_images = generator(noise)  
+        fake_images = (fake_images + 1) / 2  
+
+    fig, axes = plt.subplots(4, 4, figsize=(8, 8)) 
+
+    save_dir = Path("generated_images")
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    
+    for i, img_tensor in enumerate(fake_images):
+        img = to_pil_image(img_tensor.squeeze(0)) 
+        img.save(save_dir / f"EPOCH_{epoch}-gen_image_{i + 1}.png")
 
 
 

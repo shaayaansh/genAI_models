@@ -59,7 +59,8 @@ class Generator(nn.Module):
         self.batch_norm4 = nn.BatchNorm2d(64)
     
 
-    def forward(self, x, batch_size):
+    def forward(self, x):
+        batch_size = x.shape[0]
         x = x.view(batch_size, self.hidden_dim, 1, 1)    # size: [B, hidden_dim, 1, 1]
         x = self.conv1_transpose(x)                     # size: [B, 512, 2, 2]
         x = self.batch_norm1(x)

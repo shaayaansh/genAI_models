@@ -19,6 +19,6 @@ class GAN(nn.Module):
         Forward pass for inference: generate fake images
         """
         noise = torch.randn(batch_size, self.l_dim)
-        fake_image = self.generator(noise, batch_size)
+        fake_image = self.generator(noise)
         
         return fake_image

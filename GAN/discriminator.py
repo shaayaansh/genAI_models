@@ -40,7 +40,7 @@ class Discriminator(nn.Module):
         self.flatten = nn.Flatten()
         self.leaky_relu = nn.LeakyReLU()
         self.dropout = nn.Dropout(0.2)
-        self.linear = nn.Linear(128*2*2, 2)
+        self.linear = nn.Linear(128*2*2, 1)
         self.sigmoid = nn.Sigmoid()
 
 
