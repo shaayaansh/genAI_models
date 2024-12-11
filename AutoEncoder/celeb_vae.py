@@ -49,7 +49,7 @@ def main():
     model.train()
 
     loss_fn = nn.BCELoss()
-    optimizer = AdamW(model.parameters(), lr=0.001)
+    optimizer = AdamW(model.parameters(), lr=0.0001)
     model.train()
     num_epochs = 10
 
@@ -63,7 +63,8 @@ def main():
             outputs, z_mean, z_log_var = model(images)
             reconstruction_loss = loss_fn(outputs, images)
             kl_loss = -0.5 * torch.sum(1 + 2 * z_log_var - z_mean**2 - torch.exp(2 * z_log_var))
-            total_loss = reconstruction_loss + 0.05 * kl_loss
+            total_loss = 5000*reconstruction_loss + (0.1 * kl_loss)
+        
             total_loss.backward()
             optimizer.step()
 
@@ -194,7 +195,6 @@ class VAE(nn.Module):
         z = self.reparameterize(z_mean, z_log_var)
         decoded = self.decoder(z)
         return decoded, z_mean, z_log_var
-
 
 
 def visualize_and_save(model, dataloader, epoch, save_dir='celeb_vae_reconstructions'):
