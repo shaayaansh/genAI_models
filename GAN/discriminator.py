@@ -39,67 +39,26 @@ class Discriminator(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.leaky_relu = nn.LeakyReLU()
+        self.dropout = nn.Dropout(0.2)
         self.linear = nn.Linear(128*4*4, 2)
+        self.sigmoid = nn.Sigmoid()
 
 
     def forward(self, x):
         # input size [B, 3, 64, 64]
         x = self.conv1(x)   # output size [B, 16, 32, 32]
         x = self.leaky_relu(x)
+        x = self.dropout(x)
         x = self.conv2(x)   # output size [B, 32, 16, 16]
         x = self.leaky_relu(x)
+        x = self.dropout(x)
         x = self.conv3(x)   # output size [B, 64, 8, 8]
         x = self.leaky_relu(x)
+        x = self.dropout(x)
         x = self.conv4(x)   # output size [B, 128, 4, 4]
-        x = self.leaky_relu(x)
+        x = self.sigmoid(x)
         flattened = self.flatten(x)
         x = self.linear(flattened)
+        x = self.sigmoid(x) # output size [B, 2]
 
         return x
-
-
-
-
-
-def main():
-    transform = transforms.Compose([
-    transforms.Resize((64, 64)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5,), (0.5,))
-    ])
-
-    train_dataset = torchvision.datasets.FakeData(
-        size=1000,
-        transform=transform,
-        target_transform=None,
-        random_offset=0
-    )
-
-    test_dataset = torchvision.datasets.FakeData(
-        size=200,
-        transform=transform,
-        target_transform=None,
-        random_offset=1000
-    )
-
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=64,
-        shuffle=True
-    )
-
-    test_dataloader = DataLoader(
-        test_dataset,
-        batch_size=32,
-        shuffle=True
-    )
-    model = Discriminator()
-    images, labels = next(iter(train_dataloader))
-
-    outputs = model(images)
-    print(outputs.shape)
-
-
-
-if __name__ == "__main__":
-    main()
