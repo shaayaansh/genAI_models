@@ -27,21 +27,13 @@ class Generator(nn.Module):
         )
         self.conv3_transpose = nn.ConvTranspose2d(
             in_channels=256,        
-            out_channels=256,       
+            out_channels=128,       
             kernel_size=3,       
             stride=2,             
             padding=1,            
             output_padding=1      
         )
         self.conv4_transpose = nn.ConvTranspose2d(
-            in_channels=256,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-            output_padding=1
-        )
-        self.conv5_transpose = nn.ConvTranspose2d(
             in_channels=128,
             out_channels=64,
             kernel_size=3,
@@ -49,13 +41,14 @@ class Generator(nn.Module):
             padding=1,
             output_padding=1
         )
-        self.conv6_transpose = nn.ConvTranspose2d(
+
+        self.conv5_transpose = nn.ConvTranspose2d(
             in_channels=64,       
-            out_channels=3,       
-            kernel_size=3,        
-            stride=2,             
-            padding=1,            
-            output_padding=1      
+            out_channels=1,        
+            kernel_size=3,         
+            stride=2,              
+            padding=3,
+            output_padding=1   
         )
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
@@ -68,7 +61,6 @@ class Generator(nn.Module):
     
 
     def forward(self, x):
-        x = torch.randn(self.batch_size, self.hidden_dim)
         x = x.view(self.batch_size, self.hidden_dim, 1, 1)    # size: [B, hidden_dim, 1, 1]
         x = self.conv1_transpose(x)                     # size: [B, 512, 2, 2]
         x = self.batch_norm1(x)
@@ -76,16 +68,13 @@ class Generator(nn.Module):
         x = self.conv2_transpose(x)                     # size: [B, 256, 4, 4]
         x = self.batch_norm2(x)
         x = self.leaky_relu(x)
-        x = self.conv3_transpose(x)                     # size: [B, 256, 8, 8]
-        x = self.batch_norm2(x)
-        x = self.leaky_relu(x)
-        x = self.conv4_transpose(x)                     # size: [B, 128, 16, 16]
+        x = self.conv3_transpose(x)                     # size: [B, 128, 8, 8]
         x = self.batch_norm3(x)
         x = self.leaky_relu(x)
-        x = self.conv5_transpose(x)                     # size: [B, 64, 32, 32]
+        x = self.conv4_transpose(x)                     # size: [B, 64, 16, 16]
         x = self.batch_norm4(x)
         x = self.leaky_relu(x)
-        x = self.conv6_transpose(x)                      # size: [B, 3, 64, 64]
+        x = self.conv5_transpose(x)                     # size: [B, 1, 28, 28]
         x = self.tanh(x)
 
         return x
