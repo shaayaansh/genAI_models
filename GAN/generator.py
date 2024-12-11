@@ -7,7 +7,7 @@ import torch.nn as nn
 
 
 class Generator(nn.Module):
-    def __init__(self, hidden_dim, batch_size):
+    def __init__(self, hidden_dim):
         super(Generator, self).__init__()
         self.conv1_transpose = nn.ConvTranspose2d(
             in_channels=100,
@@ -51,7 +51,6 @@ class Generator(nn.Module):
             output_padding=1   
         )
         self.hidden_dim = hidden_dim
-        self.batch_size = batch_size
         self.leaky_relu = nn.LeakyReLU()
         self.tanh = nn.Tanh()
         self.batch_norm1 = nn.BatchNorm2d(512)
@@ -60,8 +59,8 @@ class Generator(nn.Module):
         self.batch_norm4 = nn.BatchNorm2d(64)
     
 
-    def forward(self, x):
-        x = x.view(self.batch_size, self.hidden_dim, 1, 1)    # size: [B, hidden_dim, 1, 1]
+    def forward(self, x, batch_size):
+        x = x.view(batch_size, self.hidden_dim, 1, 1)    # size: [B, hidden_dim, 1, 1]
         x = self.conv1_transpose(x)                     # size: [B, 512, 2, 2]
         x = self.batch_norm1(x)
         x = self.leaky_relu(x)

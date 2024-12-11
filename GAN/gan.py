@@ -10,15 +10,15 @@ from generator import Generator
 class GAN(nn.Module):
     def __init__(self, latent_dim):
         super(GAN, self).__init__()
-        self.discriminator = Discriminator()
-        self.generator = Generator()
         self.l_dim = latent_dim
-
+        self.discriminator = Discriminator()
+        self.generator = Generator(self.l_dim)
+        
     def forward(self, batch_size):
         """
         Forward pass for inference: generate fake images
         """
         noise = torch.randn(batch_size, self.l_dim)
-        fake_image = self.generator(noise)
+        fake_image = self.generator(noise, batch_size)
         
         return fake_image

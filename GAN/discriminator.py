@@ -57,7 +57,6 @@ class Discriminator(nn.Module):
         x = self.dropout(x)
         x = self.conv4(x)   # output size [B, 128, 2, 2]
         x = self.sigmoid(x)
-        print(x.shape)
         flattened = self.flatten(x)
         x = self.linear(flattened)
         x = self.sigmoid(x) # output size [B, 2]
