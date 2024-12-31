@@ -54,7 +54,6 @@ class Critic(nn.Module):
         x = self.leaky_relu(x)
         x = self.dropout(x)
         x = self.conv4(x)   # output size [B, 128, 2, 2]
-        x = self.sigmoid(x)
         flattened = self.flatten(x)
         x = self.linear(flattened)
 
