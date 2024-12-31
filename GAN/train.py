@@ -15,11 +15,11 @@ from pathlib import Path
 
 
 def main():
-    loader = DataLoad("train")
+    loader = DataLoad("train", batch_size=32)
     train_dataset, train_dataloader = loader.load()
 
-    num_epochs = 50
-    disc_lr = 1e-5
+    num_epochs = 300
+    disc_lr = 5e-6
     gen_lr = 1e-5
     model = GAN(latent_dim=100)
 
@@ -43,7 +43,7 @@ def main():
             fake_images = generator(noise)
 
             # smooth the labels
-            smooth_real_labels = torch.full((batch_size, 1), 0.9).float()
+            smooth_real_labels = torch.full((batch_size, 1), 0.8).float()
             real_labels = torch.ones(batch_size, 1).float()
             fake_labels = torch.zeros(batch_size, 1).float()
             
@@ -53,22 +53,23 @@ def main():
             permutation = torch.randperm(all_images.size(0))  # Generate random permutation indices
             shuffled_images = all_images[permutation]
             shuffled_labels = all_labels[permutation]
-            # -------------------------
-            # Train Discriminator
-            # -------------------------
-            disc_optimizer.zero_grad()
+            if idx % 3 == 0:
+                # -------------------------
+                # Train Discriminator
+                # -------------------------
+                disc_optimizer.zero_grad()
 
-            disc_output = discriminator(shuffled_images)
-            disc_loss = discriminator_loss(disc_output, shuffled_labels)
-            epoch_loss_disc += disc_loss
-            disc_loss.backward()
-            disc_optimizer.step()  
-            # Calculate accuracy
-            predictions = (disc_output > 0.5).float()
-            binary_labels = (shuffled_labels > 0.5).float()
-            correct_predictions = (predictions == binary_labels).sum().item()
+                disc_output = discriminator(shuffled_images)
+                disc_loss = discriminator_loss(disc_output, shuffled_labels)
+                epoch_loss_disc += disc_loss
+                disc_loss.backward()
+                disc_optimizer.step()  
+                # Calculate accuracy
+                predictions = (disc_output > 0.5).float()
+                binary_labels = (shuffled_labels > 0.5).float()
+                correct_predictions = (predictions == binary_labels).sum().item()
 
-            epoch_accuracy_disc += correct_predictions
+                epoch_accuracy_disc += correct_predictions
             # -------------------------
             # Train Generator
             # -------------------------
@@ -89,15 +90,13 @@ def main():
 def gen_image(generator, epoch):
     generator.eval()  
 
-    batch_size = 4  
+    batch_size = 1  
     latent_dim = 100  
     noise = torch.randn(batch_size, latent_dim)  
 
     with torch.no_grad(): 
         fake_images = generator(noise)  
         fake_images = (fake_images + 1) / 2  
-
-    fig, axes = plt.subplots(4, 4, figsize=(32, 32)) 
 
     save_dir = Path("generated_images")
     save_dir.mkdir(parents=True, exist_ok=True)
